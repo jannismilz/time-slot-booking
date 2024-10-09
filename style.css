@@ -1,0 +1,47 @@
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    /* width: 100%; */
+}
+
+td,
+th {
+    border: 1px solid #000;
+    text-align: left;
+    padding: 0.5rem;
+}
+
+th {
+    white-space: nowrap;
+}
+
+.sort-table-header {
+    background-color: #dddddd;
+    text-align: center;
+}
+
+.sort-table-header > th {
+    background-color: #dddddd;
+    text-align: center;
+}
+
+td {
+    width: 1.25rem;
+}
+
+td[blocked^="true"] {
+    background-color: gray;
+}
+
+#slot-block {
+    padding: 4px;
+    color: white;
+    text-align: center;
+    background-color: blue;
+    margin: auto;
+}
+
+.hidden {
+    transition: 0.01ms;
+    transform: translateX(-9999px);
+}
