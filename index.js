@@ -39,6 +39,12 @@ const slotBlockResetButton = document.getElementById("slot-block-reset");
 slotBlockResetButton.addEventListener("click", moveSlotBlockBackToContainer);
 
 /**
+ * Final data inputs
+ */
+const startTimeInput = document.getElementById("slot-startTime");
+const endTimeInput = document.getElementById("slot-endTime");
+
+/**
  * Whole interface initialization
  */
 const slotTable = document.getElementById("slot-table");
@@ -282,13 +288,31 @@ function setSlotBlockTextToTimespan(slotIndex, tourIndex) {
     const tour = tours[tourIndex];
     const totalMinutes = slotIndex * 5 - 5;
 
-    let startHours =
-        new Date(tour.startTime).getHours() + Math.floor(totalMinutes / 60);
-    let startMinutes =
-        new Date(tour.startTime).getMinutes() + (totalMinutes % 60);
+    const tourStartTime = new Date(tour.startTime);
+    const tourEndTime = new Date(tour.endTime);
+
+    let startHours = tourStartTime.getHours() + Math.floor(totalMinutes / 60);
+    let startMinutes = tourEndTime.getMinutes() + (totalMinutes % 60);
 
     let endMinutes = startMinutes + blockSlots * 5;
     let endHours = startHours + Math.floor(endMinutes / 60);
+
+    const hoursAndMinutesToUTCString = (date, hours, minutes) => {
+        let finalDate = new Date(date);
+        finalDate = new Date(finalDate.setHours(hours, minutes, 0, 0));
+        return finalDate.toISOString();
+    };
+
+    startTimeInput.value = hoursAndMinutesToUTCString(
+        tourStartTime,
+        startHours,
+        startMinutes
+    );
+    endTimeInput.value = hoursAndMinutesToUTCString(
+        tourEndTime,
+        endHours,
+        endMinutes
+    );
 
     slotBlock.innerText = `${formattedTimeString(
         startHours % 24,
@@ -301,6 +325,11 @@ function moveSlotBlockBackToContainer() {
 
     slotBlock.setAttribute("draggable", "true");
     slotBlockContainer.appendChild(slotBlock);
+
+    // Reset value fields
+    startTimeInput.removeAttribute("value");
+    endTimeInput.removeAttribute("value");
+
     resetSlotBlockText();
     resetWholeInterface();
 }
