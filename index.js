@@ -213,8 +213,9 @@ function onTimeSlotDragLeave(ev) {
 
 function onTimeSlotClick(ev, slotIndex, tourIndex) {
     const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
+    const isInTable = slotBlock.parentElement.localName === "td";
 
-    if (allowedToDrop) {
+    if (allowedToDrop && !isInTable) {
         onTimeSlotDrop(ev, slotIndex, tourIndex);
     }
 }
