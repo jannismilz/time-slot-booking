@@ -298,6 +298,7 @@ function setSlotBlockTextToTimespan(slotIndex, tourIndex) {
 function moveSlotBlockBackToContainer() {
     if (slotBlock.parentElement.localName !== "td") return;
 
+    slotBlock.setAttribute("draggable", "true");
     slotBlockContainer.appendChild(slotBlock);
     resetSlotBlockText();
     resetWholeInterface();
