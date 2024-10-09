@@ -39,6 +39,7 @@ td[blocked^="true"] {
     text-align: center;
     background-color: blue;
     margin: auto;
+    white-space: nowrap;
 }
 
 .hidden {
