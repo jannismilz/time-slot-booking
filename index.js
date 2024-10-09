@@ -22,7 +22,7 @@ const tours = [
     },
 ];
 
-const blockSlots = 6;
+const blockSlots = 4;
 let finalStartTime;
 let finalEndTime;
 
