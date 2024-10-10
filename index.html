@@ -7,16 +7,16 @@
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <input type="hidden" id="slot-startTime" name="startTime" />
-        <input type="hidden" id="slot-endTime" name="endTime" />
+        <input type="hidden" id="tsb-result-startTime" />
+        <input type="hidden" id="tsb-result-endTime" />
 
-        <table id="slot-table"></table>
+        <table id="tsb-table"></table>
 
-        <div id="slot-block-container">
-            <div id="slot-block">Drag me</div>
+        <div id="tsb-block-container">
+            <div id="tsb-block" tsb-slots="4">4 Children</div>
         </div>
 
-        <button id="slot-block-reset">Reset</button>
+        <button id="tsb-reset">Reset</button>
 
         <script src="index.js"></script>
     </body>

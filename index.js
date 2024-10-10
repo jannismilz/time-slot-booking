@@ -16,234 +16,246 @@ const tours = [
     },
     {
         title: "Tour 2",
-        startTime: "2024-10-08T21:15Z",
+        startTime: "2024-10-08T20:15Z",
         endTime: "2024-10-08T22:00Z",
         visits: [],
     },
 ];
 
-const blockSlots = 4;
-let finalStartTime;
-let finalEndTime;
+/**
+ * Elements
+ */
+const finalStartTime = document.getElementById("tsb-result-startTime");
+const finalEndTime = document.getElementById("tsb-result-endTime");
+const table = document.getElementById("tsb-table");
+const blockContainer = document.getElementById("tsb-block-container");
+const block = document.getElementById("tsb-block");
+const resetButton = document.getElementById("tsb-reset");
 
 /**
- * Slot block initialization
+ * Values
  */
-const slotBlock = document.getElementById("slot-block");
-const slotBlockContainer = document.getElementById("slot-block-container");
+const originalBlockText = block.innerText;
+const blockSlots = parseInt(block.getAttribute("tsb-slots"));
+let { earliestStartTime, latestEndTime } = tours.reduce(
+    (acc, tour) => ({
+        earliestStartTime:
+            new Date(tour.startTime) < new Date(acc.earliestStartTime)
+                ? tour.startTime
+                : acc.earliestStartTime,
+        latestEndTime:
+            new Date(tour.endTime) > new Date(acc.latestEndTime)
+                ? tour.endTime
+                : acc.latestEndTime,
+    }),
+    {
+        earliestStartTime: tours[0].startTime,
+        latestEndTime: tours[0].endTime,
+    }
+);
+earliestStartTime = new Date(earliestStartTime);
+latestEndTime = new Date(latestEndTime);
 
-/**
- * Slot block reset button
- */
-const slotBlockResetButton = document.getElementById("slot-block-reset");
-slotBlockResetButton.addEventListener("click", moveSlotBlockBackToContainer);
+const totalSlotsAmount = parseInt(
+    (latestEndTime - earliestStartTime) / 1000 / 60 / 15
+);
 
-/**
- * Final data inputs
- */
-const startTimeInput = document.getElementById("slot-startTime");
-const endTimeInput = document.getElementById("slot-endTime");
-
-/**
- * Whole interface initialization
- */
-const slotTable = document.getElementById("slot-table");
-let slotTableBody = slotTable.querySelector("tbody");
-if (!slotTable.querySelector("tbody")) {
-    slotTable.innerHTML += "<tbody></tbody>";
+let tableBody = table.querySelector("tbody");
+if (!tableBody) {
+    table.innerHTML = "<tbody></tbody>";
+    tableBody = table.querySelector("tbody");
 }
-slotTableBody = document.querySelector("#slot-table > tbody");
 
-resetWholeInterface();
-initSlotBlock();
+/**
+ * Start point
+ */
+generateTable();
 
 /**
  *
  * Slot Block
  *
  */
-function initSlotBlock() {
-    const firstTdEl = slotTableBody.getElementsByTagName("td")[0];
-    const tdElStyle = window.getComputedStyle(firstTdEl, null);
+// function initSlotBlock() {
+//     const firstTdEl = slotTableBody.getElementsByTagName("td")[0];
+//     const tdElStyle = window.getComputedStyle(firstTdEl, null);
 
-    const slotBlockStyle = window.getComputedStyle(slotBlock, null);
+//     const slotBlockStyle = window.getComputedStyle(slotBlock, null);
 
-    const tdPaddingX =
-        parseFloat(tdElStyle.getPropertyValue("padding-left")) +
-        parseFloat(tdElStyle.getPropertyValue("padding-right"));
-    const slotBlockPadding =
-        parseFloat(slotBlockStyle.getPropertyValue("padding-left")) +
-        parseFloat(slotBlockStyle.getPropertyValue("padding-right"));
-    const tdBorderWidth = tdElStyle.getPropertyValue("border-width");
-    const tdWidthInRem = firstTdEl.offsetWidth / 16;
+//     const tdPaddingX =
+//         parseFloat(tdElStyle.getPropertyValue("padding-left")) +
+//         parseFloat(tdElStyle.getPropertyValue("padding-right"));
+//     const slotBlockPadding =
+//         parseFloat(slotBlockStyle.getPropertyValue("padding-left")) +
+//         parseFloat(slotBlockStyle.getPropertyValue("padding-right"));
+//     const tdBorderWidth = tdElStyle.getPropertyValue("border-width");
+//     const tdWidthInRem = firstTdEl.offsetWidth / 16;
 
-    // Dynamically adjust width considering own styling
-    slotBlock.style.width = `calc(${
-        blockSlots * tdWidthInRem - (tdPaddingX + slotBlockPadding) / 16
-    }rem - ${tdBorderWidth})`;
-    slotBlock.setAttribute("draggable", "true");
-    slotBlock.setAttribute("ondragstart", "onSlotBlockDragStart(event)");
-    slotBlock.setAttribute("ondragend", "onSlotBlockDragEnd(event)");
-    resetSlotBlockText();
-}
+//     // Dynamically adjust width considering own styling
+//     slotBlock.style.width = `calc(${
+//         blockSlots * tdWidthInRem - (tdPaddingX + slotBlockPadding) / 16
+//     }rem - ${tdBorderWidth})`;
+//     slotBlock.setAttribute("draggable", "true");
+//     slotBlock.setAttribute("ondragstart", "onSlotBlockDragStart(event)");
+//     slotBlock.setAttribute("ondragend", "onSlotBlockDragEnd(event)");
+//     resetSlotBlockText();
+// }
 
 function resetSlotBlockText() {
-    slotBlock.innerText = `${blockSlots} ${
-        blockSlots > 1 ? "Children" : "Child"
-    }`;
+    slotBlock.innerText = originalBlockText;
 }
 
-function onSlotBlockDragStart(ev) {
-    if (ev.target.parentElement.localName === "td") return;
+// function onSlotBlockDragStart(ev) {
+//     if (ev.target.parentElement.localName === "td") return;
 
-    event.dataTransfer.setDragImage(slotBlock, 0, 0);
-    ev.target.classList.add("hidden");
-    moveSlotBlockBackToContainer();
-    resetWholeInterface();
-}
+//     event.dataTransfer.setDragImage(slotBlock, 0, 0);
+//     ev.target.classList.add("hidden");
+//     moveSlotBlockBackToContainer();
+//     generateTable();
+// }
 
-function onSlotBlockDragEnd(ev) {
-    ev.target.classList.remove("hidden");
-    ev.srcElement.classList.remove("hidden");
-}
+// function onSlotBlockDragEnd(ev) {
+//     ev.target.classList.remove("hidden");
+//     ev.srcElement.classList.remove("hidden");
+// }
 
 /**
  *
  * Table Tour
  *
  */
-function generateTourRow(tourTitle, tourIndex, slotsAmount, ghost) {
-    const tourRow = [];
+function generateTourRow(tour, tourIndex, ghost) {
+    const tourRow = [`<th>${tour.title}</th>`];
     ghost = ghost ?? false;
+    const tourStartTimeMinutes = new Date(tour.startTime).getMinutes();
 
-    tourRow.push(`<th>${tourTitle}</th>`);
-    for (let i = 1; i <= slotsAmount; i++) {
-        tourRow.push(
-            `<td
-              ${!ghost && `ondrop="onTimeSlotDrop(event, ${i}, ${tourIndex})"`}
-              ${
-                  !ghost &&
-                  `ondragover="onTimeSlotDragOver(event, ${i}, ${tourIndex})"`
-              }
-              ${!ghost && `ondragleave="onTimeSlotDragLeave(event)"`}
-              ${
-                  !ghost &&
-                  `onclick="onTimeSlotClick(event, ${i}, ${tourIndex})"`
-              }
-          ></td>`
-        );
-    }
-
-    return (
-        `<tr ${
-            ghost ? "style='visibility: collapse'" : `tourIndex="${tourIndex}"`
-        }>` +
-        tourRow.join("\n") +
-        "</tr>"
-    );
-}
-
-function blockBookedVisits(tourIndex) {
-    const tour = tours[tourIndex];
-    const tourStartDate = new Date(tour.startTime);
-    const tourEndDate = new Date(tour.endTime);
-    const tourVisits = tour.visits;
-    const tourRow = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`);
-
-    let slotIndexes = [];
-
-    tourVisits.forEach((visit) => {
-        const startDate = new Date(visit.startTime);
-        const endDate = new Date(visit.endTime);
-
-        // If start or end of visit is not in the tour, just return
-        if (
-            startDate < tourStartDate ||
-            endDate < tourStartDate ||
-            startDate > tourEndDate ||
-            endDate > tourEndDate
-        ) {
-            console.error("Visit is out of tour time period!");
-
-            return;
+    for (let i = 1; i <= totalSlotsAmount; i++) {
+        if (ghost) {
+            tourRow.push("<td></td>");
+        } else {
+            tourRow.push(
+                `<td
+                    ondrop="onTimeSlotDrop(event)"
+                    ondragover="onTimeSlotDragOver(event)"
+                    ondragleave="onTimeSlotDragLeave(event)"
+                    onclick="onTimeSlotClick(event)"
+                    slotindex="${i}"
+                    ${
+                        (i + tourStartTimeMinutes / 15) % 4 === 0
+                            ? "isfullhour"
+                            : ""
+                    }
+                ></td>`
+            );
         }
-
-        const minutesToTourStartDate = (startDate - tourStartDate) / 1000 / 60;
-        const firstIndex = minutesToTourStartDate / 5;
-        const visitMinutes = (endDate - startDate) / 1000 / 60;
-
-        const tempIndexes = [];
-
-        for (let i = 1; i <= visitMinutes / 5; i++) {
-            tempIndexes.push(firstIndex + i);
-        }
-
-        slotIndexes.push(tempIndexes);
-    });
-
-    slotIndexes.forEach((visitIndexes) => {
-        visitIndexes.forEach((visitSlotIndex, index) => {
-            const childEl = tourRow.children[visitSlotIndex];
-            if (index === 0) {
-                childEl.setAttribute("colspan", `${visitIndexes.length}`);
-            } else {
-                childEl.style.display = "none";
-            }
-            childEl.setAttribute("blocked", "true");
-        });
-    });
-}
-
-function onTimeSlotDrop(ev, slotIndex, tourIndex) {
-    ev.preventDefault();
-
-    setSlotBlockTextToTimespan(slotIndex, tourIndex);
-    ev.target.appendChild(slotBlock);
-    slotBlock.removeAttribute("draggable");
-    ev.target.setAttribute("colspan", blockSlots);
-
-    let currentSlot = ev.target;
-    // -1 because the active slot is excluded
-    let slotsLeft = blockSlots - 1;
-
-    while (slotsLeft > 0) {
-        currentSlot = currentSlot.nextElementSibling;
-        if (currentSlot) currentSlot.style.display = "none";
-        slotsLeft--;
-    }
-}
-
-function onTimeSlotDragLeave(ev) {
-    ev.preventDefault();
-}
-
-function onTimeSlotClick(ev, slotIndex, tourIndex) {
-    const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
-    const isInTable = slotBlock.parentElement.localName === "td";
-
-    if (allowedToDrop && !isInTable) {
-        onTimeSlotDrop(ev, slotIndex, tourIndex);
-    }
-}
-
-function onTimeSlotDragOver(ev, slotIndex, tourIndex) {
-    let currentSlot = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`)
-        .children[slotIndex];
-    // -1 to exclude current item
-    let slotsLeft = blockSlots - 1;
-
-    while (slotsLeft) {
-        if (currentSlot.getAttribute("blocked") === "true") return false;
-        if (!currentSlot.nextElementSibling) return false;
-        if (currentSlot.nextElementSibling.getAttribute("blocked") === "true")
-            return false;
-        currentSlot = currentSlot.nextElementSibling;
-        slotsLeft--;
     }
 
-    ev.preventDefault();
-    return true;
+    return `<tr ${
+        ghost ? "style='visibility: collapse'" : `tourindex="${tourIndex}"`
+    }>${tourRow.join("\n")}</tr>`;
 }
+
+// function blockBookedVisits(tourIndex) {
+//     const tour = tours[tourIndex];
+//     const tourStartDate = new Date(tour.startTime);
+//     const tourEndDate = new Date(tour.endTime);
+//     const tourVisits = tour.visits;
+//     const tourRow = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`);
+
+//     let slotIndexes = [];
+
+//     tourVisits.forEach((visit) => {
+//         const startDate = new Date(visit.startTime);
+//         const endDate = new Date(visit.endTime);
+
+//         // If start or end of visit is not in the tour, just return
+//         if (
+//             startDate < tourStartDate ||
+//             endDate < tourStartDate ||
+//             startDate > tourEndDate ||
+//             endDate > tourEndDate
+//         ) {
+//             console.error("Visit is out of tour time period!");
+
+//             return;
+//         }
+
+//         const minutesToTourStartDate = (startDate - tourStartDate) / 1000 / 60;
+//         const firstIndex = minutesToTourStartDate / 5;
+//         const visitMinutes = (endDate - startDate) / 1000 / 60;
+
+//         const tempIndexes = [];
+
+//         for (let i = 1; i <= visitMinutes / 5; i++) {
+//             tempIndexes.push(firstIndex + i);
+//         }
+
+//         slotIndexes.push(tempIndexes);
+//     });
+
+//     slotIndexes.forEach((visitIndexes) => {
+//         visitIndexes.forEach((visitSlotIndex, index) => {
+//             const childEl = tourRow.children[visitSlotIndex];
+//             if (index === 0) {
+//                 childEl.setAttribute("colspan", `${visitIndexes.length}`);
+//             } else {
+//                 childEl.style.display = "none";
+//             }
+//             childEl.setAttribute("blocked", "true");
+//         });
+//     });
+// }
+
+// function onTimeSlotDrop(ev, slotIndex, tourIndex) {
+//     ev.preventDefault();
+
+//     setSlotBlockTextToTimespan(slotIndex, tourIndex);
+//     ev.target.appendChild(slotBlock);
+//     slotBlock.removeAttribute("draggable");
+//     ev.target.setAttribute("colspan", blockSlots);
+
+//     let currentSlot = ev.target;
+//     // -1 because the active slot is excluded
+//     let slotsLeft = blockSlots - 1;
+
+//     while (slotsLeft > 0) {
+//         currentSlot = currentSlot.nextElementSibling;
+//         if (currentSlot) currentSlot.style.display = "none";
+//         slotsLeft--;
+//     }
+// }
+
+// function onTimeSlotDragLeave(ev) {
+//     ev.preventDefault();
+// }
+
+// function onTimeSlotClick(ev, slotIndex, tourIndex) {
+//     const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
+//     const isInTable = slotBlock.parentElement.localName === "td";
+
+//     if (allowedToDrop && !isInTable) {
+//         onTimeSlotDrop(ev, slotIndex, tourIndex);
+//     }
+// }
+
+// function onTimeSlotDragOver(ev, slotIndex, tourIndex) {
+//     let currentSlot = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`)
+//         .children[slotIndex];
+//     // -1 to exclude current item
+//     let slotsLeft = blockSlots - 1;
+
+//     while (slotsLeft) {
+//         if (currentSlot.getAttribute("blocked") === "true") return false;
+//         if (!currentSlot.nextElementSibling) return false;
+//         if (currentSlot.nextElementSibling.getAttribute("blocked") === "true")
+//             return false;
+//         currentSlot = currentSlot.nextElementSibling;
+//         slotsLeft--;
+//     }
+
+//     ev.preventDefault();
+//     return true;
+// }
 
 /**
  *
@@ -256,9 +268,11 @@ function formattedTimeString(hours, minutes) {
         .padStart(2, "0")}`;
 }
 
-function resetWholeInterface() {
-    slotTable.innerHTML = "<tbody></tbody>";
-    slotTableBody = document.querySelector("#slot-table > tbody");
+function generateTable() {
+    table.innerHTML = "<tbody></tbody>";
+    tableBody = table.querySelector("tbody");
+
+    tableBody.innerHTML += generateHeaderRow();
 
     tours.forEach((tour, tourIndex) => {
         const startDate = new Date(tour.startTime);
@@ -266,89 +280,79 @@ function resetWholeInterface() {
         const totalTimeInSeconds =
             (endDate.getTime() - startDate.getTime()) / 1000;
 
-        const slotsAmount = Math.floor(totalTimeInSeconds / (5 * 60));
-
-        slotTableBody.innerHTML += generateHeaderRow(startDate, slotsAmount);
-        slotTableBody.innerHTML += generateTourRow(
-            tour.title,
-            tourIndex,
-            slotsAmount
-        );
-        slotTableBody.innerHTML += generateTourRow(
-            tour.title,
-            tourIndex,
-            slotsAmount,
-            true
-        );
-        blockBookedVisits(tourIndex);
+        tableBody.innerHTML += generateTourRow(tour, tourIndex);
+        // tableBody.innerHTML += generateTourRow(tour, tourIndex, true);
+        // blockBookedVisits(tourIndex);
     });
 }
 
-function setSlotBlockTextToTimespan(slotIndex, tourIndex) {
-    const tour = tours[tourIndex];
-    const totalMinutes = slotIndex * 5 - 5;
+// function setSlotBlockTextToTimespan(slotIndex, tourIndex) {
+//     const tour = tours[tourIndex];
+//     const totalMinutes = slotIndex * 5 - 5;
 
-    const tourStartTime = new Date(tour.startTime);
-    const tourEndTime = new Date(tour.endTime);
+//     const tourStartTime = new Date(tour.startTime);
+//     const tourEndTime = new Date(tour.endTime);
 
-    let startHours = tourStartTime.getHours() + Math.floor(totalMinutes / 60);
-    let startMinutes = tourEndTime.getMinutes() + (totalMinutes % 60);
+//     let startHours = tourStartTime.getHours() + Math.floor(totalMinutes / 60);
+//     let startMinutes = tourEndTime.getMinutes() + (totalMinutes % 60);
 
-    let endMinutes = startMinutes + blockSlots * 5;
-    let endHours = startHours + Math.floor(endMinutes / 60);
+//     let endMinutes = startMinutes + blockSlots * 5;
+//     let endHours = startHours + Math.floor(endMinutes / 60);
 
-    const hoursAndMinutesToUTCString = (date, hours, minutes) => {
-        let finalDate = new Date(date);
-        finalDate = new Date(finalDate.setHours(hours, minutes, 0, 0));
-        return finalDate.toISOString();
-    };
+//     const hoursAndMinutesToUTCString = (date, hours, minutes) => {
+//         let finalDate = new Date(date);
+//         finalDate = new Date(finalDate.setHours(hours, minutes, 0, 0));
+//         return finalDate.toISOString();
+//     };
 
-    startTimeInput.value = hoursAndMinutesToUTCString(
-        tourStartTime,
-        startHours,
-        startMinutes
-    );
-    endTimeInput.value = hoursAndMinutesToUTCString(
-        tourEndTime,
-        endHours,
-        endMinutes
-    );
+//     startTimeInput.value = hoursAndMinutesToUTCString(
+//         tourStartTime,
+//         startHours,
+//         startMinutes
+//     );
+//     endTimeInput.value = hoursAndMinutesToUTCString(
+//         tourEndTime,
+//         endHours,
+//         endMinutes
+//     );
 
-    slotBlock.innerText = `${formattedTimeString(
-        startHours % 24,
-        startMinutes % 60
-    )} - ${formattedTimeString(endHours % 24, endMinutes % 60)}`;
-}
+//     slotBlock.innerText = `${formattedTimeString(
+//         startHours % 24,
+//         startMinutes % 60
+//     )} - ${formattedTimeString(endHours % 24, endMinutes % 60)}`;
+// }
 
-function moveSlotBlockBackToContainer() {
-    if (slotBlock.parentElement.localName !== "td") return;
+// function moveSlotBlockBackToContainer() {
+//     if (slotBlock.parentElement.localName !== "td") return;
 
-    slotBlock.setAttribute("draggable", "true");
-    slotBlockContainer.appendChild(slotBlock);
+//     slotBlock.setAttribute("draggable", "true");
+//     slotBlockContainer.appendChild(slotBlock);
 
-    // Reset value fields
-    startTimeInput.removeAttribute("value");
-    endTimeInput.removeAttribute("value");
+//     // Reset value fields
+//     startTimeInput.removeAttribute("value");
+//     endTimeInput.removeAttribute("value");
 
-    resetSlotBlockText();
-    resetWholeInterface();
-}
+//     resetSlotBlockText();
+//     generateTable();
+// }
 
 /**
  *
  * Table Header
  *
  */
-function generateHeaderRow(startDate, slotsAmount) {
-    let startHours = startDate.getHours();
-    let startMinutes = startDate.getMinutes();
+function generateHeaderRow() {
+    let startHours = earliestStartTime.getHours();
+    let startMinutes = earliestStartTime.getMinutes();
 
     const headerRow = ["<th></th>"];
 
-    while (slotsAmount > 0) {
-        if (slotsAmount > 6) {
+    let slotsAmountLeft = totalSlotsAmount;
+
+    while (slotsAmountLeft > 0) {
+        if (slotsAmountLeft > 4) {
             headerRow.push(
-                `<th colspan="6">${formattedTimeString(
+                `<th colspan="4">${formattedTimeString(
                     startHours,
                     startMinutes
                 )}</th>`
@@ -360,16 +364,16 @@ function generateHeaderRow(startDate, slotsAmount) {
             startHours = startHours % 24;
             startMinutes = startMinutes % 60;
 
-            slotsAmount -= 6;
+            slotsAmountLeft -= 4;
         } else {
             headerRow.push(
-                `<th colspan="${slotsAmount}">${formattedTimeString(
+                `<th colspan="${slotsAmountLeft}">${formattedTimeString(
                     startHours,
                     startMinutes
                 )}</th>`
             );
 
-            slotsAmount = 0;
+            slotsAmountLeft = 0;
         }
     }
 
