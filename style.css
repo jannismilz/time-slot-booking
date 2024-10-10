@@ -26,7 +26,10 @@ th {
 }
 
 td {
-    width: 1.25rem;
+    width: 2.5rem;
+}
+td[isfullhour] {
+    border-right: 4px solid black;
 }
 
 td[blocked^="true"] {

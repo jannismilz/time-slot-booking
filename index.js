@@ -1,7 +1,7 @@
 const tours = [
     {
         title: "Tour 1",
-        startTime: "2024-10-08T21:00Z",
+        startTime: "2024-10-08T21:15Z",
         endTime: "2024-10-08T23:00Z",
         visits: [
             {
@@ -17,7 +17,7 @@ const tours = [
     {
         title: "Tour 2",
         startTime: "2024-10-08T20:15Z",
-        endTime: "2024-10-08T22:00Z",
+        endTime: "2024-10-08T23:45Z",
         visits: [],
     },
 ];
@@ -127,7 +127,7 @@ function resetSlotBlockText() {
 function generateTourRow(tour, tourIndex, ghost) {
     const tourRow = [`<th>${tour.title}</th>`];
     ghost = ghost ?? false;
-    const tourStartTimeMinutes = new Date(tour.startTime).getMinutes();
+    const tourStartTimeMinutes = earliestStartTime.getMinutes();
 
     for (let i = 1; i <= totalSlotsAmount; i++) {
         if (ghost) {
@@ -343,16 +343,35 @@ function generateTable() {
  */
 function generateHeaderRow() {
     let startHours = earliestStartTime.getHours();
-    let startMinutes = earliestStartTime.getMinutes();
+    const tourStartTimeMinutes = earliestStartTime.getMinutes();
+    let startMinutes = tourStartTimeMinutes;
 
     const headerRow = ["<th></th>"];
 
     let slotsAmountLeft = totalSlotsAmount;
 
+    if (tourStartTimeMinutes / 15 !== 0) {
+        const slotsToFullHalfHour = 2 - tourStartTimeMinutes / 15;
+        const minutesToFullHour = slotsToFullHalfHour * 15;
+        headerRow.push(
+            `<th colspan="${slotsToFullHalfHour}">${formattedTimeString(
+                startHours,
+                startMinutes
+            )}</th>`
+        );
+
+        slotsAmountLeft -= slotsToFullHalfHour;
+        startHours += startMinutes + minutesToFullHour > 29 ? 1 : 0;
+        startMinutes += minutesToFullHour;
+
+        startHours = startHours % 24;
+        startMinutes = startMinutes % 60;
+    }
+
     while (slotsAmountLeft > 0) {
-        if (slotsAmountLeft > 4) {
+        if (slotsAmountLeft > 2) {
             headerRow.push(
-                `<th colspan="4">${formattedTimeString(
+                `<th colspan="2">${formattedTimeString(
                     startHours,
                     startMinutes
                 )}</th>`
@@ -364,7 +383,9 @@ function generateHeaderRow() {
             startHours = startHours % 24;
             startMinutes = startMinutes % 60;
 
-            slotsAmountLeft -= 4;
+            startHours = startHours % 24;
+
+            slotsAmountLeft -= 2;
         } else {
             headerRow.push(
                 `<th colspan="${slotsAmountLeft}">${formattedTimeString(
