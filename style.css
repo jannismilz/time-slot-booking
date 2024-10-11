@@ -1,3 +1,7 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -28,15 +32,11 @@ th {
 td {
     width: 2.5rem;
 }
-td[isfullhour] {
+/* td[isfullhour] {
     border-right: 4px solid black;
-}
+} */
 
-td[blocked^="true"] {
-    background-color: gray;
-}
-
-#slot-block {
+#tsb-block {
     padding: 4px;
     color: white;
     text-align: center;
@@ -48,4 +48,12 @@ td[blocked^="true"] {
 .hidden {
     transition: 0.01ms;
     transform: translateX(-9999px);
+}
+
+td[tsb-non-visit="true"] {
+    background-color: gray;
+}
+
+td[tsb-booked="true"] {
+    background-color: lightgray;
 }

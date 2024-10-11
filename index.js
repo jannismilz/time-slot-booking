@@ -2,7 +2,7 @@ const tours = [
     {
         title: "Tour 1",
         startTime: "2024-10-08T21:15Z",
-        endTime: "2024-10-08T23:00Z",
+        endTime: "2024-10-08T23:45Z",
         visits: [
             {
                 startTime: "2024-10-08T21:15Z",
@@ -17,7 +17,7 @@ const tours = [
     {
         title: "Tour 2",
         startTime: "2024-10-08T20:15Z",
-        endTime: "2024-10-08T23:45Z",
+        endTime: "2024-10-08T23:00Z",
         visits: [],
     },
 ];
@@ -70,54 +70,60 @@ if (!tableBody) {
  * Start point
  */
 generateTable();
+initBlock();
 
 /**
  *
  * Slot Block
  *
  */
-// function initSlotBlock() {
-//     const firstTdEl = slotTableBody.getElementsByTagName("td")[0];
-//     const tdElStyle = window.getComputedStyle(firstTdEl, null);
+function initBlock() {
+    const tdElements = tableBody.getElementsByTagName("td");
+    const measuringTdEl = tdElements[tdElements.length / 2 - 1];
+    const tdElStyle = window.getComputedStyle(measuringTdEl, null);
 
-//     const slotBlockStyle = window.getComputedStyle(slotBlock, null);
+    const blockStyle = window.getComputedStyle(block, null);
 
-//     const tdPaddingX =
-//         parseFloat(tdElStyle.getPropertyValue("padding-left")) +
-//         parseFloat(tdElStyle.getPropertyValue("padding-right"));
-//     const slotBlockPadding =
-//         parseFloat(slotBlockStyle.getPropertyValue("padding-left")) +
-//         parseFloat(slotBlockStyle.getPropertyValue("padding-right"));
-//     const tdBorderWidth = tdElStyle.getPropertyValue("border-width");
-//     const tdWidthInRem = firstTdEl.offsetWidth / 16;
+    const tdPaddingX =
+        parseFloat(tdElStyle.getPropertyValue("padding-left")) +
+        parseFloat(tdElStyle.getPropertyValue("padding-right"));
+    const blockPadding =
+        parseFloat(blockStyle.getPropertyValue("padding-left")) +
+        parseFloat(blockStyle.getPropertyValue("padding-right"));
+    const tdBorderWidth =
+        parseFloat(tdElStyle.getPropertyValue("border-left-width")) +
+        parseFloat(tdElStyle.getPropertyValue("border-right-width"));
+    const tdWidthInRem = measuringTdEl.offsetWidth / 16;
 
-//     // Dynamically adjust width considering own styling
-//     slotBlock.style.width = `calc(${
-//         blockSlots * tdWidthInRem - (tdPaddingX + slotBlockPadding) / 16
-//     }rem - ${tdBorderWidth})`;
-//     slotBlock.setAttribute("draggable", "true");
-//     slotBlock.setAttribute("ondragstart", "onSlotBlockDragStart(event)");
-//     slotBlock.setAttribute("ondragend", "onSlotBlockDragEnd(event)");
-//     resetSlotBlockText();
-// }
+    // Dynamically adjust width considering own styling
+    block.style.width = `calc(${
+        blockSlots * tdWidthInRem - (tdPaddingX + blockPadding) / 16
+    }rem - ${tdBorderWidth}px)`;
 
-function resetSlotBlockText() {
-    slotBlock.innerText = originalBlockText;
+    block.setAttribute("draggable", "true");
+    block.setAttribute("ondragstart", "onSlotBlockDragStart(event)");
+    block.setAttribute("ondragend", "onSlotBlockDragEnd(event)");
+    resetBlockText();
 }
 
-// function onSlotBlockDragStart(ev) {
-//     if (ev.target.parentElement.localName === "td") return;
+function resetBlockText() {
+    block.innerText = originalBlockText;
+}
 
-//     event.dataTransfer.setDragImage(slotBlock, 0, 0);
-//     ev.target.classList.add("hidden");
-//     moveSlotBlockBackToContainer();
-//     generateTable();
-// }
+function onSlotBlockDragStart(ev) {
+    if (ev.target.parentElement.localName === "td") return;
 
-// function onSlotBlockDragEnd(ev) {
-//     ev.target.classList.remove("hidden");
-//     ev.srcElement.classList.remove("hidden");
-// }
+    event.dataTransfer.setDragImage(block, 0, 0);
+    ev.target.style.transition = "0.01ms";
+    ev.target.style.transform = "translateX(-9999px)";
+    moveSlotBlockBackToContainer();
+    generateTable();
+}
+
+function onSlotBlockDragEnd(ev) {
+    ev.target.style.transition = "";
+    ev.target.style.transform = "";
+}
 
 /**
  *
@@ -129,7 +135,7 @@ function generateTourRow(tour, tourIndex, ghost) {
     ghost = ghost ?? false;
     const tourStartTimeMinutes = earliestStartTime.getMinutes();
 
-    for (let i = 1; i <= totalSlotsAmount; i++) {
+    for (let i = 0; i < totalSlotsAmount; i++) {
         if (ghost) {
             tourRow.push("<td></td>");
         } else {
@@ -141,7 +147,7 @@ function generateTourRow(tour, tourIndex, ghost) {
                     onclick="onTimeSlotClick(event)"
                     slotindex="${i}"
                     ${
-                        (i + tourStartTimeMinutes / 15) % 4 === 0
+                        (i + tourStartTimeMinutes / 15 + 1) % 4 === 0
                             ? "isfullhour"
                             : ""
                     }
@@ -155,107 +161,175 @@ function generateTourRow(tour, tourIndex, ghost) {
     }>${tourRow.join("\n")}</tr>`;
 }
 
-// function blockBookedVisits(tourIndex) {
-//     const tour = tours[tourIndex];
-//     const tourStartDate = new Date(tour.startTime);
-//     const tourEndDate = new Date(tour.endTime);
-//     const tourVisits = tour.visits;
-//     const tourRow = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`);
+function blockOutsideTourSlots(tourIndex) {
+    const tour = tours[tourIndex];
+    const tourStartTime = new Date(tour.startTime);
+    const tourEndTime = new Date(tour.endTime);
+    const tourRow = tableBody.querySelector(`[tourindex="${tourIndex}"]`);
 
-//     let slotIndexes = [];
+    const slotsSinceEarliest =
+        (tourStartTime - earliestStartTime) / 1000 / 60 / 15;
+    const slotsUntilLatest = (latestEndTime - tourEndTime) / 1000 / 60 / 15;
 
-//     tourVisits.forEach((visit) => {
-//         const startDate = new Date(visit.startTime);
-//         const endDate = new Date(visit.endTime);
+    const blockConditionalEl = (slotIndex, isMainEl, colspan) => {
+        const slotEl = tourRow.querySelector(`[slotindex="${slotIndex}"]`);
 
-//         // If start or end of visit is not in the tour, just return
-//         if (
-//             startDate < tourStartDate ||
-//             endDate < tourStartDate ||
-//             startDate > tourEndDate ||
-//             endDate > tourEndDate
-//         ) {
-//             console.error("Visit is out of tour time period!");
+        if (isMainEl) {
+            slotEl.setAttribute("colspan", `${colspan}`);
+            slotEl.setAttribute("tsb-non-visit", "true");
+        } else {
+            slotEl.style.display = "none";
+        }
+    };
 
-//             return;
-//         }
+    [...Array(slotsSinceEarliest).keys()].forEach((slot) => {
+        blockConditionalEl(slot, slot === 0, slotsSinceEarliest);
+    });
 
-//         const minutesToTourStartDate = (startDate - tourStartDate) / 1000 / 60;
-//         const firstIndex = minutesToTourStartDate / 5;
-//         const visitMinutes = (endDate - startDate) / 1000 / 60;
+    [...Array(slotsUntilLatest).keys()].forEach((slot) => {
+        blockConditionalEl(
+            totalSlotsAmount - slot - 1,
+            // -1 because totalSlotsAmount starts at 1 instead of 0
+            slot + 1 === slotsUntilLatest,
+            slotsUntilLatest
+        );
+    });
+}
 
-//         const tempIndexes = [];
+function assignSlotIndexes(tourIndex) {
+    const tour = tours[tourIndex];
+    const tourRow = tableBody.querySelector(`[tourindex="${tourIndex}"]`);
 
-//         for (let i = 1; i <= visitMinutes / 5; i++) {
-//             tempIndexes.push(firstIndex + i);
-//         }
+    // Reset all existing slotindexes first
+    Array.from(tourRow.querySelectorAll("td[slotindex]")).forEach((slot) =>
+        slot.removeAttribute("slotindex")
+    );
 
-//         slotIndexes.push(tempIndexes);
-//     });
+    const validTourSlots = Array.from(
+        tourRow.querySelectorAll('td:not([tsb-non-visit="true"])')
+    ).filter((slot) => slot.style.display !== "none");
 
-//     slotIndexes.forEach((visitIndexes) => {
-//         visitIndexes.forEach((visitSlotIndex, index) => {
-//             const childEl = tourRow.children[visitSlotIndex];
-//             if (index === 0) {
-//                 childEl.setAttribute("colspan", `${visitIndexes.length}`);
-//             } else {
-//                 childEl.style.display = "none";
-//             }
-//             childEl.setAttribute("blocked", "true");
-//         });
-//     });
-// }
+    validTourSlots.forEach((slot, index) => {
+        slot.setAttribute("slotindex", `${index}`);
+    });
+}
 
-// function onTimeSlotDrop(ev, slotIndex, tourIndex) {
-//     ev.preventDefault();
+function blockBookedVisits(tourIndex) {
+    const tour = tours[tourIndex];
+    const tourStartTime = new Date(tour.startTime);
+    const tourEndTime = new Date(tour.endTime);
+    const tourVisits = tour.visits;
+    const tourRow = tableBody.querySelector(`[tourIndex="${tourIndex}"]`);
 
-//     setSlotBlockTextToTimespan(slotIndex, tourIndex);
-//     ev.target.appendChild(slotBlock);
-//     slotBlock.removeAttribute("draggable");
-//     ev.target.setAttribute("colspan", blockSlots);
+    let slotIndexes = [];
 
-//     let currentSlot = ev.target;
-//     // -1 because the active slot is excluded
-//     let slotsLeft = blockSlots - 1;
+    tourVisits.forEach((visit) => {
+        const visitStartTime = new Date(visit.startTime);
+        const visitEndDate = new Date(visit.endTime);
 
-//     while (slotsLeft > 0) {
-//         currentSlot = currentSlot.nextElementSibling;
-//         if (currentSlot) currentSlot.style.display = "none";
-//         slotsLeft--;
-//     }
-// }
+        // If start or end of visit is not in the tour, just return
+        if (
+            visitStartTime < tourStartTime ||
+            visitEndDate < tourStartTime ||
+            visitStartTime > tourEndTime ||
+            visitEndDate > tourEndTime
+        ) {
+            console.error("Visit is out of tour time period!");
 
-// function onTimeSlotDragLeave(ev) {
-//     ev.preventDefault();
-// }
+            return;
+        }
 
-// function onTimeSlotClick(ev, slotIndex, tourIndex) {
-//     const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
-//     const isInTable = slotBlock.parentElement.localName === "td";
+        const minutesToTourStartDate =
+            (visitStartTime - tourStartTime) / 1000 / 60;
+        const firstIndex = minutesToTourStartDate / 15;
+        const visitMinutes = (visitEndDate - visitStartTime) / 1000 / 60;
 
-//     if (allowedToDrop && !isInTable) {
-//         onTimeSlotDrop(ev, slotIndex, tourIndex);
-//     }
-// }
+        const tempIndexes = [];
 
-// function onTimeSlotDragOver(ev, slotIndex, tourIndex) {
-//     let currentSlot = slotTableBody.querySelector(`[tourIndex="${tourIndex}"]`)
-//         .children[slotIndex];
-//     // -1 to exclude current item
-//     let slotsLeft = blockSlots - 1;
+        for (let i = 0; i < visitMinutes / 15; i++) {
+            tempIndexes.push(firstIndex + i);
+        }
 
-//     while (slotsLeft) {
-//         if (currentSlot.getAttribute("blocked") === "true") return false;
-//         if (!currentSlot.nextElementSibling) return false;
-//         if (currentSlot.nextElementSibling.getAttribute("blocked") === "true")
-//             return false;
-//         currentSlot = currentSlot.nextElementSibling;
-//         slotsLeft--;
-//     }
+        slotIndexes.push(tempIndexes);
+    });
 
-//     ev.preventDefault();
-//     return true;
-// }
+    slotIndexes.forEach((visitIndexes) => {
+        visitIndexes.forEach((visitSlotIndex, index) => {
+            const childEl = tourRow.querySelector(
+                `[slotIndex="${visitSlotIndex}"]`
+            );
+            if (index === 0) {
+                childEl.setAttribute("colspan", `${visitIndexes.length}`);
+                childEl.setAttribute("tsb-booked", "true");
+            } else {
+                childEl.style.display = "none";
+            }
+        });
+    });
+}
+
+function onTimeSlotDrop(ev) {
+    ev.preventDefault();
+    const slotIndex = parseInt(ev.target.getAttribute("slotindex"));
+    const tourIndex = parseInt(
+        ev.target.parentElement.getAttribute("tourindex")
+    );
+
+    setBlockTextToTimespan(slotIndex, tourIndex);
+    ev.target.appendChild(block);
+    block.removeAttribute("draggable");
+    ev.target.setAttribute("colspan", blockSlots);
+
+    let currentSlot = ev.target;
+    // -1 because the active slot is excluded
+    let slotsLeft = blockSlots - 1;
+
+    while (slotsLeft > 0) {
+        currentSlot = currentSlot.nextElementSibling;
+        if (currentSlot) currentSlot.style.display = "none";
+        slotsLeft--;
+    }
+}
+
+function onTimeSlotDragLeave(ev) {
+    ev.preventDefault();
+}
+
+function onTimeSlotClick(ev, slotIndex, tourIndex) {
+    const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
+    const isInTable = block.parentElement.localName === "td";
+
+    if (allowedToDrop && !isInTable) {
+        onTimeSlotDrop(ev, slotIndex, tourIndex);
+    }
+}
+
+function onTimeSlotDragOver(ev) {
+    const tourRow = ev.target.parentElement;
+    let currentSlot = ev.target;
+    // -1 to exclude current item
+    let slotsLeft = blockSlots - 1;
+
+    while (slotsLeft) {
+        if (currentSlot.getAttribute("tsb-booked") === "true") return false;
+        if (currentSlot.getAttribute("tsb-non-visit") === "true") return false;
+        if (!currentSlot.nextElementSibling) return false;
+        if (
+            currentSlot.nextElementSibling.getAttribute("tsb-booked") === "true"
+        )
+            return false;
+        if (
+            currentSlot.nextElementSibling.getAttribute("tsb-non-visit") ===
+            "true"
+        )
+            return false;
+        currentSlot = currentSlot.nextElementSibling;
+        slotsLeft--;
+    }
+
+    ev.preventDefault();
+    return true;
+}
 
 /**
  *
@@ -281,60 +355,62 @@ function generateTable() {
             (endDate.getTime() - startDate.getTime()) / 1000;
 
         tableBody.innerHTML += generateTourRow(tour, tourIndex);
-        // tableBody.innerHTML += generateTourRow(tour, tourIndex, true);
-        // blockBookedVisits(tourIndex);
+        blockOutsideTourSlots(tourIndex);
+        assignSlotIndexes(tourIndex);
+        blockBookedVisits(tourIndex);
     });
+    tableBody.innerHTML += generateTourRow(tours[0], 0, true);
 }
 
-// function setSlotBlockTextToTimespan(slotIndex, tourIndex) {
-//     const tour = tours[tourIndex];
-//     const totalMinutes = slotIndex * 5 - 5;
+function setBlockTextToTimespan(slotIndex, tourIndex) {
+    const tour = tours[tourIndex];
+    const totalMinutes = slotIndex * 15 - 15;
 
-//     const tourStartTime = new Date(tour.startTime);
-//     const tourEndTime = new Date(tour.endTime);
+    const tourStartTime = new Date(tour.startTime);
+    const tourEndTime = new Date(tour.endTime);
 
-//     let startHours = tourStartTime.getHours() + Math.floor(totalMinutes / 60);
-//     let startMinutes = tourEndTime.getMinutes() + (totalMinutes % 60);
+    let startHours = tourStartTime.getHours() + Math.floor(totalMinutes / 60);
+    let startMinutes = tourEndTime.getMinutes() + (totalMinutes % 60);
 
-//     let endMinutes = startMinutes + blockSlots * 5;
-//     let endHours = startHours + Math.floor(endMinutes / 60);
+    let endMinutes = startMinutes + blockSlots * 5;
+    let endHours = startHours + Math.floor(endMinutes / 60);
 
-//     const hoursAndMinutesToUTCString = (date, hours, minutes) => {
-//         let finalDate = new Date(date);
-//         finalDate = new Date(finalDate.setHours(hours, minutes, 0, 0));
-//         return finalDate.toISOString();
-//     };
+    const hoursAndMinutesToUTCString = (date, hours, minutes) => {
+        let finalDate = new Date(date);
+        finalDate = new Date(finalDate.setHours(hours, minutes, 0, 0));
+        return finalDate.toISOString();
+    };
 
-//     startTimeInput.value = hoursAndMinutesToUTCString(
-//         tourStartTime,
-//         startHours,
-//         startMinutes
-//     );
-//     endTimeInput.value = hoursAndMinutesToUTCString(
-//         tourEndTime,
-//         endHours,
-//         endMinutes
-//     );
+    finalStartTime.value = hoursAndMinutesToUTCString(
+        tourStartTime,
+        startHours,
+        startMinutes
+    );
+    finalEndTime.value = hoursAndMinutesToUTCString(
+        tourEndTime,
+        endHours,
+        endMinutes
+    );
 
-//     slotBlock.innerText = `${formattedTimeString(
-//         startHours % 24,
-//         startMinutes % 60
-//     )} - ${formattedTimeString(endHours % 24, endMinutes % 60)}`;
-// }
+    block.innerText = `${formattedTimeString(
+        startHours % 24,
+        startMinutes % 60
+    )} - ${formattedTimeString(endHours % 24, endMinutes % 60)}`;
+}
 
-// function moveSlotBlockBackToContainer() {
-//     if (slotBlock.parentElement.localName !== "td") return;
+function moveSlotBlockBackToContainer() {
+    if (block.parentElement.localName !== "td") return;
 
-//     slotBlock.setAttribute("draggable", "true");
-//     slotBlockContainer.appendChild(slotBlock);
+    block.setAttribute("draggable", "true");
+    blockContainer.appendChild(block);
 
-//     // Reset value fields
-//     startTimeInput.removeAttribute("value");
-//     endTimeInput.removeAttribute("value");
+    // Reset value fields
+    startTimeInput.removeAttribute("value");
+    endTimeInput.removeAttribute("value");
 
-//     resetSlotBlockText();
-//     generateTable();
-// }
+    resetBlockText();
+    generateTable();
+}
 
 /**
  *
@@ -361,7 +437,7 @@ function generateHeaderRow() {
         );
 
         slotsAmountLeft -= slotsToFullHalfHour;
-        startHours += startMinutes + minutesToFullHour > 29 ? 1 : 0;
+        startHours += startMinutes + minutesToFullHour > 59 ? 1 : 0;
         startMinutes += minutesToFullHour;
 
         startHours = startHours % 24;
@@ -382,8 +458,6 @@ function generateHeaderRow() {
 
             startHours = startHours % 24;
             startMinutes = startMinutes % 60;
-
-            startHours = startHours % 24;
 
             slotsAmountLeft -= 2;
         } else {
