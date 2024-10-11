@@ -76,7 +76,9 @@ initBlock();
  *
  */
 function initBlock() {
-    const tdElements = tableBody.querySelectorAll("tr:not([tourindex]) > td");
+    const tdElements = tableBody.querySelectorAll(
+        "tr:not([tsb-tourindex]) > td"
+    );
     const measuringTdEl = tdElements[tdElements.length / 2 - 1];
     const tdElStyle = window.getComputedStyle(measuringTdEl, null);
 
@@ -141,10 +143,10 @@ function generateTourRow(tour, tourIndex, ghost) {
                     ondragover="onTimeSlotDragOver(event)"
                     ondragleave="onTimeSlotDragLeave(event)"
                     onclick="onTimeSlotClick(event)"
-                    slotindex="${i}"
+                    tsb-slotindex="${i}"
                     ${
                         (i + tourStartTimeMinutes / 15 + 1) % 4 === 0
-                            ? "isfullhour"
+                            ? "tsb-isfullhour"
                             : ""
                     }
                 ></td>`
@@ -153,7 +155,7 @@ function generateTourRow(tour, tourIndex, ghost) {
     }
 
     return `<tr ${
-        ghost ? "style='visibility: collapse'" : `tourindex="${tourIndex}"`
+        ghost ? "style='visibility: collapse'" : `tsb-tourindex="${tourIndex}"`
     }>${tourRow.join("\n")}</tr>`;
 }
 
@@ -161,14 +163,14 @@ function blockOutsideTourSlots(tourIndex) {
     const tour = tours[tourIndex];
     const tourStartTime = new Date(tour.startTime);
     const tourEndTime = new Date(tour.endTime);
-    const tourRow = tableBody.querySelector(`[tourindex="${tourIndex}"]`);
+    const tourRow = tableBody.querySelector(`[tsb-tourindex="${tourIndex}"]`);
 
     const slotsSinceEarliest =
         (tourStartTime - earliestStartTime) / 1000 / 60 / 15;
     const slotsUntilLatest = (latestEndTime - tourEndTime) / 1000 / 60 / 15;
 
     const blockConditionalEl = (slotIndex, isMainEl, colspan) => {
-        const slotEl = tourRow.querySelector(`[slotindex="${slotIndex}"]`);
+        const slotEl = tourRow.querySelector(`[tsb-slotindex="${slotIndex}"]`);
 
         if (isMainEl) {
             slotEl.setAttribute("colspan", `${colspan}`);
@@ -194,11 +196,11 @@ function blockOutsideTourSlots(tourIndex) {
 
 function assignSlotIndexes(tourIndex) {
     const tour = tours[tourIndex];
-    const tourRow = tableBody.querySelector(`[tourindex="${tourIndex}"]`);
+    const tourRow = tableBody.querySelector(`[tsb-tourindex="${tourIndex}"]`);
 
     // Reset all existing slotindexes first
-    Array.from(tourRow.querySelectorAll("td[slotindex]")).forEach((slot) =>
-        slot.removeAttribute("slotindex")
+    Array.from(tourRow.querySelectorAll("td[tsb-slotindex]")).forEach((slot) =>
+        slot.removeAttribute("tsb-slotindex")
     );
 
     const validTourSlots = Array.from(
@@ -206,7 +208,7 @@ function assignSlotIndexes(tourIndex) {
     ).filter((slot) => slot.style.display !== "none");
 
     validTourSlots.forEach((slot, index) => {
-        slot.setAttribute("slotindex", `${index}`);
+        slot.setAttribute("tsb-slotindex", `${index}`);
     });
 }
 
@@ -215,7 +217,7 @@ function blockBookedVisits(tourIndex) {
     const tourStartTime = new Date(tour.startTime);
     const tourEndTime = new Date(tour.endTime);
     const tourVisits = tour.visits;
-    const tourRow = tableBody.querySelector(`[tourIndex="${tourIndex}"]`);
+    const tourRow = tableBody.querySelector(`[tsb-tourindex="${tourIndex}"]`);
 
     let slotIndexes = [];
 
@@ -252,7 +254,7 @@ function blockBookedVisits(tourIndex) {
     slotIndexes.forEach((visitIndexes) => {
         visitIndexes.forEach((visitSlotIndex, index) => {
             const childEl = tourRow.querySelector(
-                `[slotIndex="${visitSlotIndex}"]`
+                `[tsb-slotindex="${visitSlotIndex}"]`
             );
             if (index === 0) {
                 childEl.setAttribute("colspan", `${visitIndexes.length}`);
@@ -266,9 +268,9 @@ function blockBookedVisits(tourIndex) {
 
 function onTimeSlotDrop(ev) {
     ev.preventDefault();
-    const slotIndex = parseInt(ev.target.getAttribute("slotindex"));
+    const slotIndex = parseInt(ev.target.getAttribute("tsb-slotindex"));
     const tourIndex = parseInt(
-        ev.target.parentElement.getAttribute("tourindex")
+        ev.target.parentElement.getAttribute("tsb-tourindex")
     );
 
     setBlockTextToTimespan(slotIndex, tourIndex);
