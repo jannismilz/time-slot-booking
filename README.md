@@ -19,14 +19,14 @@ This is a JS script that generates a table with time slots form a simple json st
 
 ## HTML Attributes and ids
 
-| ID                     | Description                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------------- |
-| `tsb-block-container`  | The container that holds the slot block. This it to know where the block has to return to when resetting. |
-| `tsb-block`            | The slot block itself. This is the draggable slot selector                                                |
-| `tsb-reset`            | Button that triggers a reset to default data when clicked.                                                |
-| `tsb-result-endTime`   | Input for final end time                                                                                  |
-| `tsb-result-startTime` | Input for final start time                                                                                |
-| `tsb-table`            | The table itself where all the tours and slots are generated in                                           |
+| ID                                                              | Description                                                                                               |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| <span style="white-space: nowrap;">`tsb-block-container`</span> | The container that holds the slot block. This it to know where the block has to return to when resetting. |
+| `tsb-block`                                                     | The slot block itself. This is the draggable slot selector                                                |
+| `tsb-reset`                                                     | Button that triggers a reset to default data when clicked.                                                |
+| `tsb-result-endTime`                                            | Input for final end time                                                                                  |
+| `tsb-result-startTime`                                          | Input for final start time                                                                                |
+| `tsb-table`                                                     | The table itself where all the tours and slots are generated in                                           |
 
 | Attribute      | Description                                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
