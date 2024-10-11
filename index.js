@@ -1,27 +1,3 @@
-const tours = [
-    {
-        title: "Tour 1",
-        startTime: "2024-10-08T21:15Z",
-        endTime: "2024-10-08T23:45Z",
-        visits: [
-            {
-                startTime: "2024-10-08T21:15Z",
-                endTime: "2024-10-08T21:30Z",
-            },
-            {
-                startTime: "2024-10-08T21:45Z",
-                endTime: "2024-10-08T22:45Z",
-            },
-        ],
-    },
-    {
-        title: "Tour 2",
-        startTime: "2024-10-08T20:15Z",
-        endTime: "2024-10-08T23:00Z",
-        visits: [],
-    },
-];
-
 /**
  * Elements
  */
@@ -35,6 +11,7 @@ const resetButton = document.getElementById("tsb-reset");
 /**
  * Values
  */
+const tours = JSON.parse(table.getAttribute("tsb-data"));
 const originalBlockText = block.innerText;
 const blockSlots = parseInt(block.getAttribute("tsb-slots"));
 let { earliestStartTime, latestEndTime } = tours.reduce(

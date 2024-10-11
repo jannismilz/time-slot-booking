@@ -10,7 +10,32 @@
         <input type="hidden" id="tsb-result-startTime" />
         <input type="hidden" id="tsb-result-endTime" />
 
-        <table id="tsb-table"></table>
+        <table
+            id="tsb-table"
+            tsb-data='[
+                {
+                    "title": "Tour 1",
+                    "startTime": "2024-10-08T21:15Z",
+                    "endTime": "2024-10-08T23:45Z",
+                    "visits": [
+                        {
+                            "startTime": "2024-10-08T21:15Z",
+                            "endTime": "2024-10-08T21:30Z"
+                        },
+                        {
+                            "startTime": "2024-10-08T21:45Z",
+                            "endTime": "2024-10-08T22:45Z"
+                        }
+                    ]
+                },
+                {
+                    "title": "Tour 2",
+                    "startTime": "2024-10-08T20:15Z",
+                    "endTime": "2024-10-08T23:00Z",
+                    "visits": []
+                }
+            ]'
+        ></table>
 
         <div id="tsb-block-container">
             <div id="tsb-block" tsb-slots="4">4 Children</div>
