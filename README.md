@@ -43,25 +43,25 @@ This is a JS script that generates a table with time slots form a simple json st
 ```json
 [
     {
-        title: "Tour 1",
-        startTime: "2024-10-08T21:15Z",
-        endTime: "2024-10-08T23:45Z",
-        visits: [
+        "title": "Tour 1",
+        "startTime": "2024-10-08T21:15Z",
+        "endTime": "2024-10-08T23:45Z",
+        "visits": [
             {
-                startTime: "2024-10-08T21:15Z",
-                endTime: "2024-10-08T21:30Z",
+                "startTime": "2024-10-08T21:15Z",
+                "endTime": "2024-10-08T21:30Z"
             },
             {
-                startTime: "2024-10-08T21:45Z",
-                endTime: "2024-10-08T22:45Z",
-            },
-        ],
+                "startTime": "2024-10-08T21:45Z",
+                "endTime": "2024-10-08T22:45Z"
+            }
+        ]
     },
     {
-        title: "Tour 2",
-        startTime: "2024-10-08T20:15Z",
-        endTime: "2024-10-08T23:00Z",
-        visits: [],
-    },
-];
+        "title": "Tour 2",
+        "startTime": "2024-10-08T20:15Z",
+        "endTime": "2024-10-08T23:00Z",
+        "visits": []
+    }
+]
 ```
