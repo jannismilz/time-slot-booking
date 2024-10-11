@@ -10,7 +10,7 @@ const tours = [
             },
             {
                 startTime: "2024-10-08T21:45Z",
-                endTime: "2024-10-08T22:15Z",
+                endTime: "2024-10-08T22:45Z",
             },
         ],
     },
@@ -61,10 +61,8 @@ const totalSlotsAmount = parseInt(
 );
 
 let tableBody = table.querySelector("tbody");
-if (!tableBody) {
-    table.innerHTML = "<tbody></tbody>";
-    tableBody = table.querySelector("tbody");
-}
+
+resetButton.addEventListener("click", moveBlockBackToContainer);
 
 /**
  * Start point
@@ -78,7 +76,7 @@ initBlock();
  *
  */
 function initBlock() {
-    const tdElements = tableBody.getElementsByTagName("td");
+    const tdElements = tableBody.querySelectorAll("tr:not([tourindex]) > td");
     const measuringTdEl = tdElements[tdElements.length / 2 - 1];
     const tdElStyle = window.getComputedStyle(measuringTdEl, null);
 
@@ -116,8 +114,6 @@ function onSlotBlockDragStart(ev) {
     event.dataTransfer.setDragImage(block, 0, 0);
     ev.target.style.transition = "0.01ms";
     ev.target.style.transform = "translateX(-9999px)";
-    moveSlotBlockBackToContainer();
-    generateTable();
 }
 
 function onSlotBlockDragEnd(ev) {
@@ -398,15 +394,15 @@ function setBlockTextToTimespan(slotIndex, tourIndex) {
     )} - ${formattedTimeString(endHours % 24, endMinutes % 60)}`;
 }
 
-function moveSlotBlockBackToContainer() {
+function moveBlockBackToContainer() {
     if (block.parentElement.localName !== "td") return;
 
     block.setAttribute("draggable", "true");
     blockContainer.appendChild(block);
 
     // Reset value fields
-    startTimeInput.removeAttribute("value");
-    endTimeInput.removeAttribute("value");
+    finalStartTime.removeAttribute("value");
+    finalEndTime.removeAttribute("value");
 
     resetBlockText();
     generateTable();

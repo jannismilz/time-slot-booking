@@ -30,7 +30,7 @@ th {
 }
 
 td {
-    width: 2.5rem;
+    min-width: 2.5rem;
 }
 /* td[isfullhour] {
     border-right: 4px solid black;
