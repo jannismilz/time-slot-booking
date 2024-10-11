@@ -293,7 +293,11 @@ function onTimeSlotDragLeave(ev) {
     ev.preventDefault();
 }
 
-function onTimeSlotClick(ev, slotIndex, tourIndex) {
+function onTimeSlotClick(ev) {
+    const slotIndex = parseInt(ev.target.getAttribute("tsb-slotindex"));
+    const tourIndex = parseInt(
+        ev.target.parentElement.getAttribute("tsb-tourindex")
+    );
     const allowedToDrop = onTimeSlotDragOver(ev, slotIndex, tourIndex);
     const isInTable = block.parentElement.localName === "td";
 
