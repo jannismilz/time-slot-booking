@@ -8,7 +8,11 @@ This is a JS script that generates a table with time slots form a simple json st
 <input type="hidden" id="tsb-result-startTime" />
 <input type="hidden" id="tsb-result-endTime" />
 
-<table id="tsb-table"></table>
+<table
+    id="tsb-table"
+    tsb-data='...'
+>
+</table>
 
 <div id="tsb-block-container">
     <div id="tsb-block" tsb-slots="4">4 Children</div>
